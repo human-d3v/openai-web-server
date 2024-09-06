@@ -3,6 +3,10 @@ name = "openai-web-server"
 version = "0.1.0"
 edition = "2021"
 
+[lints.rust]
+unsafe_code = "forbid"
+unused = "allow" # for early dev
+
 [dependencies]
 async-openai = "0.24.0"
 dotenv = "0.15.0"
