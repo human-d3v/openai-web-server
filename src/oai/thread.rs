@@ -2,12 +2,27 @@
 use std::time::Duration;
 
 //region: --- crates
-use async_openai::{types::{CreateAssistantToolFileSearchResources, CreateAssistantToolResources, CreateMessageRequest, CreateMessageRequestContent, CreateRunRequest, CreateThreadRequest, MessageContent, MessageObject, MessageRole, RunStatus, ThreadObject}, Threads};
+use async_openai::{
+    types::{ 
+        CreateAssistantToolFileSearchResources, 
+        CreateAssistantToolResources, 
+        CreateMessageRequest, 
+        CreateMessageRequestContent, 
+        CreateRunRequest, 
+        CreateThreadRequest, 
+        MessageContent, 
+        MessageObject, 
+        MessageRole, 
+        RunStatus, 
+        ThreadObject
+    }, 
+    Threads
+};
 use rocket::tokio::time::sleep;
 //end region: --- crates
 
 //region: --- modules
-use crate::{env_vars::AsstId, error::Result};
+use crate::{env_vars::AsstId, error::OwsError};
 use super::{client::OaClient, vec_store::VecStoreId};
 //end region: --- modules
 
@@ -23,7 +38,7 @@ pub const POLLING_DURATION_MS:u64 = 500;
 pub async fn spawn_thread(
     client: &OaClient,
     vec_store_id: &VecStoreId
-) -> Result<ThreadId> {
+) -> Result<ThreadId, OwsError> {
     let request = CreateThreadRequest {
         tool_resources: Some(CreateAssistantToolResources {
             file_search: Some(CreateAssistantToolFileSearchResources { 
@@ -40,7 +55,7 @@ pub async fn spawn_thread(
 pub async fn fetch_thread(
     thread_id: &ThreadId,
     client: &OaClient
-) -> Result<ThreadObject>{
+) -> Result<ThreadObject, OwsError>{
     let thread = client.threads().retrieve(thread_id).await?;
     Ok(thread)
 }
@@ -50,7 +65,7 @@ pub async fn handle_chat(
     asst_id: &AsstId,
     thread_id: &ThreadId,
     frontend_msg: &str,
-) -> Result<String> {
+) -> Result<String, OwsError> {
     //build msg obj
     let msg = CreateMessageRequest {
         role: MessageRole::User,
@@ -89,7 +104,7 @@ pub async fn handle_chat(
 pub async fn get_first_thread_msg_content(
     client: &OaClient,
     thread_id: &ThreadId
-) -> Result<String>{
+) -> Result<String, OwsError>{
     static QUERY: [(&str, &str); 1] = [("limit", "1")];
     let msgs = client.threads().messages(thread_id).list(&QUERY).await?;
 
@@ -104,7 +119,7 @@ pub async fn get_first_thread_msg_content(
 
 pub fn get_txt_content(
     msg: MessageObject
-) -> Result<String> {
+) -> Result<String, OwsError> {
     let msg_content = msg
         .content
         .into_iter()

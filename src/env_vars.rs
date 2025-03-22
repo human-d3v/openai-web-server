@@ -2,7 +2,8 @@
 
 use dotenv::dotenv;
 
-use crate::error::Result;
+use crate::error::OwsError;
+
 
 //end region: --- crates
 //region: --- types
@@ -19,13 +20,9 @@ pub struct EnvVars {
 
 
 //region: --- main
-pub fn retrieve_env_vars() -> Result<EnvVars> {
-    if dotenv().is_err() {
-        eprintln!("no .env file found");
-    } else {
-        println!("found .env file")
-    }
-    let _ = dotenv::from_filename(".env");
+pub fn retrieve_env_vars() -> Result<EnvVars, Box<dyn std::error::Error> {
+    dotenv::from_filename(".env")
+        .map_err(|e| OwsError::EnvError(e.to_string()))?;
     let api_key:ApiKey = std::env::var("API_KEY")?;
     let asst_id:AsstId = std::env::var("ASSISTANT_ID")?;
     let docker: Docker = std::env::var("DOCKER")?.parse()?;

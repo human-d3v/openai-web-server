@@ -2,8 +2,9 @@
 use async_openai::types::{MessageAttachment, MessageAttachmentTool};
 //end region: --- crates
 
+use crate::error::OwsError;
+
 //region: --- modules
-use crate::error::Result;
 use super::client::OaClient;
 //end region: --- modules
 
@@ -19,7 +20,7 @@ pub const DEFAULT_QUERY: &[(&str, &str)] = &[("limit","100")];
 //region: --- vector storage handling
 pub async fn load_vec_store(
     client:&OaClient,
-) -> Result<VecStoreId> {
+) -> Result<VecStoreId, OwsError> {
     let vec_stores = client.vector_stores().list(DEFAULT_QUERY).await?;
     let vec_store:VecStoreId = vec_stores.data[0].id.clone();
     Ok(vec_store)
@@ -28,7 +29,7 @@ pub async fn load_vec_store(
 pub async fn loac_vec_store_files(
     client:&OaClient,
     vec_store_id:&VecStoreId
-) -> Result<Vec<FileId>> {
+) -> Result<Vec<FileId>, OwsError> {
     let files = client.vector_stores()
         .files(vec_store_id)
         .list(DEFAULT_QUERY).await?;
@@ -39,7 +40,7 @@ pub async fn loac_vec_store_files(
 
 pub async fn build_attachments_obj(
     file_vec:Vec<FileId>
-) -> Result<Vec<MessageAttachment>> {
+) -> Result<Vec<MessageAttachment>, OwsError> {
     let mut attachments: Vec<MessageAttachment> = [].to_vec();
     for file in file_vec {
         attachments.push(
